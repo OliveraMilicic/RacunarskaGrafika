@@ -35,7 +35,7 @@ int main(void)
     unsigned int wWidth = 1600;
     unsigned int wHeight = 800;
     unsigned int mWidth = 400;
-    unsigned int mHeight = 400; //dimenzije 2d mape
+    unsigned int mHeight = 400; //dimenzije 2d mape majevice
     const char wTitle[] = "[Olivera Milicic AI 5/2022]";
     window = glfwCreateWindow(wWidth, wHeight, wTitle, NULL, NULL);
 
@@ -54,6 +54,9 @@ int main(void)
         return 3;
     }
 
+    //glEnable(GL_DEPTH_TEST); //depth test
+ 
+
     //shaderi
     unsigned int texShader = createShader("tex.vert", "tex.frag");
     unsigned int letShader = createShader("let.vert", "let.frag");
@@ -62,7 +65,7 @@ int main(void)
     unsigned int batShader = createShader("bat.vert", "bat.frag");
 
 
-    const int n = 11;
+    const int n = 10;
 
     unsigned int VAO[n];
     glGenVertexArrays(n, VAO);
@@ -76,13 +79,23 @@ int main(void)
          1.0, -1.0,    1.0, 0.0,     // dole desno
         -1.0,  1.0,    0.0, 1.0,     // gore levo 
          1.0,  1.0,    1.0, 1.0      // gore desno
-
     };
 
     unsigned int stride = 4 * sizeof(float);
-    //pravougaonik tekstura mape
+
+
+    //pravougaonik providna tekstura
     glBindVertexArray(VAO[0]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    //pravougaonik tekstura mape
+    glBindVertexArray(VAO[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
@@ -158,14 +171,9 @@ int main(void)
 
 
 
-    //pravougaonik - kontrolna tabla, baterija1, baterija 2, zeleno staklo
+    //pravougaonik -  baterija1, baterija 2, zeleno staklo
     float vertices1[] =
     {  // x     y         r     g      b    a
-        -1.0, -1.0,      0.42, 0.42, 0.42, 1.0,
-         1.0, -1.0,      0.42, 0.42, 0.42, 1.0,
-        -1.0, -0.74,     0.42, 0.42, 0.42, 1.0,
-         1.0, -0.74,     0.42, 0.42, 0.42, 1.0,
-
         -0.75, -0.93,    0.0,  0.0,  0.0,  1.0,
         -0.75, -0.81,    0.0,  0.0,  0.0,  1.0,
         -0.1, -0.93,     0.0,  0.0,  0.0,  1.0,
@@ -185,15 +193,15 @@ int main(void)
     };
 
     //pravougaonik kontrl tabla
-    glBindVertexArray(VAO[1]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(5 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    //glBindVertexArray(VAO[1]);
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
+    //glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
+    //glEnableVertexAttribArray(1);
+    //glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(5 * sizeof(float)));
+    //glEnableVertexAttribArray(2);
 
     //baterija1
     glBindVertexArray(VAO[8]);
@@ -254,9 +262,9 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-
-    unsigned checkerTexture = loadImageToTexture("res/Majevica.png"); 
-    glBindTexture(GL_TEXTURE_2D, checkerTexture);
+    //tekstura mape
+    unsigned checkerTexture1 = loadImageToTexture("res/Majevica.png"); 
+    glBindTexture(GL_TEXTURE_2D, checkerTexture1);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -264,13 +272,31 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    unsigned uTexLoc = glGetUniformLocation(texShader, "uTex");
-    glUniform1i(uTexLoc, 0);
+    unsigned uTexLoc1 = glGetUniformLocation(texShader, "uTex1");
+    glUniform1i(uTexLoc1, 0);
+
+    //providna tekstura
+    unsigned checkerTexture2 = loadImageToTexture("res/Providna.png");
+    glBindTexture(GL_TEXTURE_2D, checkerTexture2);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    unsigned uTexLoc2 = glGetUniformLocation(texShader, "uTex2");
+    glUniform1i(uTexLoc2, 1);
+    unsigned UseTextLoc = glGetUniformLocation(texShader, "usetexture");
+
+
 
     unsigned uPosLoc = glGetUniformLocation(letShader, "uPos");
     unsigned colorLocation = glGetUniformLocation(letShader, "uColor");
     unsigned switchLocation = glGetUniformLocation(buttonShader, "swOnOff");
     unsigned batPosLoc = glGetUniformLocation(batShader, "batPos");
+
+    
 
 
     float dx1 = 0;
@@ -405,18 +431,22 @@ int main(void)
             LetelicaDeaktivirana2 = 1;
         }
 
+      
+
+        glClearColor(0.0, 0.0, 0.80, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT); //brisemo depth buffer ovde
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //brisemo depth buffer ovde
 
 
-        glClearColor(0.25, 0.0, 0.25, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
 
 
         //pravougaonik tekstura mape
         glViewport(wWidth/2 - mWidth/2, 0, mWidth, mHeight);//iscrtavanje prozora na sredini ekrana, smanjen
+        glUniform1i(UseTextLoc, 0);
         glUseProgram(texShader);
-        glBindVertexArray(VAO[0]);
+        glBindVertexArray(VAO[1]);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, checkerTexture);
+        glBindTexture(GL_TEXTURE_2D, checkerTexture1);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -456,17 +486,27 @@ int main(void)
         glBindVertexArray(VAO[4]);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDrawArrays(GL_TRIANGLE_STRIP, 12, 4);
+        glDrawArrays(GL_TRIANGLE_STRIP, 8, 4);
 
 
         glViewport(0, 0, wWidth/2, wHeight);   //iscrtavanje prozora na levoj strani ekrana - kamera levog drona
+
+
+        //pravougaonik providna tekstura
+        glUniform1i(UseTextLoc, 1);
+        glUseProgram(texShader);
+        glBindVertexArray(VAO[0]);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, checkerTexture2);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         //baterija1
         if (LetelicaDeaktivirana1 == 0) {
             glUseProgram(batShader);
             glUniform1f(batPosLoc, 360 - praznjenjeBat1);
             glBindVertexArray(VAO[8]);
-            glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
         //dugme on/off 1
         glUseProgram(buttonShader);
@@ -488,7 +528,7 @@ int main(void)
             glUseProgram(batShader);
             glUniform1f(batPosLoc, 1500 - praznjenjeBat2);
             glBindVertexArray(VAO[9]);
-            glDrawArrays(GL_TRIANGLE_STRIP, 8, 4);
+            glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
         }
         //dugme on/off 2
         glUseProgram(buttonShader);
@@ -507,7 +547,8 @@ int main(void)
         glfwPollEvents(); 
     }
 
-    glDeleteTextures(1, &checkerTexture);
+    glDeleteTextures(1, &checkerTexture1);
+    glDeleteTextures(1, &checkerTexture2);
     glDeleteBuffers(n, VBO);
     glDeleteVertexArrays(n, VAO);
     glDeleteProgram(texShader);
