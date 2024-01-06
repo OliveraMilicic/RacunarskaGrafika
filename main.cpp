@@ -8,8 +8,15 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "shader.hpp"
+#include "model.hpp"
+
+//#define STB_IMAGE_IMPLEMENTATION
+//#include "stb_image.h"
 
 unsigned int compileShader(GLenum type, const char* source);
 unsigned int createShader(const char* vsSource, const char* fsSource);
@@ -38,6 +45,7 @@ int main(void)
     unsigned int mHeight = 400; //dimenzije 2d mape majevice
     const char wTitle[] = "[Olivera Milicic AI 5/2022]";
     window = glfwCreateWindow(wWidth, wHeight, wTitle, NULL, NULL);
+    int showSmallMap = 0; //IZIGNORISEMO MALU 2D MAPU
 
     if (window == NULL)
     {
@@ -53,9 +61,22 @@ int main(void)
         std::cout << "GLEW nije mogao da se ucita! :'(\n";
         return 3;
     }
-
-    //glEnable(GL_DEPTH_TEST); //depth test
  
+    //**********************************************UCITAVANJE*MODELA******************************************************
+    Model drone("res/dron.obj");
+
+    Shader DroneShader("drone.vert", "drone.frag");
+
+    DroneShader.use();
+    DroneShader.setVec3("uLightPos", 0, 1, 3);
+    DroneShader.setVec3("uViewPos", 0, 0, 5);
+    DroneShader.setVec3("uLightColor", 1, 1, 1);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)wWidth / (float)wHeight, 0.1f, 100.0f);
+    DroneShader.setMat4("uP", projection);
+    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    DroneShader.setMat4("uV", view);
+    glm::mat4 model = glm::mat4(1.0f);
+
 
     //shaderi
     unsigned int texShader = createShader("tex.vert", "tex.frag");
@@ -74,32 +95,32 @@ int main(void)
 
     //pravougaonik za mapu, za providnu teksturu
     float vertices[] =
-    {  // x     y       s    t
-        -1.0, -1.0,    0.0, 0.0,     // dole levo
-         1.0, -1.0,    1.0, 0.0,     // dole desno
-        -1.0,  1.0,    0.0, 1.0,     // gore levo 
-         1.0,  1.0,    1.0, 1.0      // gore desno
+    {  // x     y    z       s    t
+        -1.0, -1.0, 0.0,     0.0, 0.0,     // dole levo
+         1.0, -1.0, 0.0,     1.0, 0.0,     // dole desno
+        -1.0,  1.0, 0.0,     0.0, 1.0,     // gore levo 
+         1.0,  1.0, 0.0,     1.0, 1.0      // gore desno
     };
 
-    unsigned int stride = 4 * sizeof(float);
+    unsigned int stride = 5 * sizeof(float);
 
 
     //pravougaonik providna tekstura
     glBindVertexArray(VAO[0]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     //pravougaonik tekstura mape
     glBindVertexArray(VAO[1]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     
@@ -173,22 +194,21 @@ int main(void)
 
     //pravougaonik -  baterija1, baterija 2, zeleno staklo
     float vertices1[] =
-    {  // x     y         r     g      b    a
-        -0.75, -0.93,    0.0,  0.0,  0.0,  1.0,
-        -0.75, -0.81,    0.0,  0.0,  0.0,  1.0,
-        -0.1, -0.93,     0.0,  0.0,  0.0,  1.0,
-        -0.1, -0.81,     0.0,  0.0,  0.0,  1.0,
+    {  // x     y     z         r     g      b    a
+        -0.75, -0.93, 0.0,     0.0,  0.0,  0.0,  1.0,
+        -0.75, -0.81, 0.0,     0.0,  0.0,  0.0,  1.0,
+        -0.1, -0.93,  0.0,     0.0,  0.0,  0.0,  1.0,
+        -0.1, -0.81,  0.0,     0.0,  0.0,  0.0,  1.0,
 
-         0.75, -0.93,    0.0,  0.0,  0.0,  1.0,
-         0.75, -0.81,    0.0,  0.0,  0.0,  1.0,
-         0.1, -0.93,     0.0,  0.0,  0.0,  1.0,
-         0.1, -0.81,     0.0,  0.0,  0.0,  1.0,
+         0.75, -0.93, 0.0,     0.0,  0.0,  0.0,  1.0,
+         0.75, -0.81, 0.0,     0.0,  0.0,  0.0,  1.0,
+         0.1, -0.93,  0.0,     0.0,  0.0,  0.0,  1.0,
+         0.1, -0.81,  0.0,     0.0,  0.0,  0.0,  1.0,
 
-         -1.0, -1.0,     0.0,  1.0,   0.0,  0.4,
-          1.0, -1.0,     0.0,  1.0,   0.0,  0.4,
-         -1.0,  1.0,     0.0,  1.0,   0.0,  0.4,
-          1.0,  1.0,     0.0,  1.0,   0.0,  0.4
-
+         -1.0, -1.0,  0.0,     0.0,  1.0,  0.0,  0.4,
+          1.0, -1.0,  0.0,     0.0,  1.0,  0.0,  0.4,
+         -1.0,  1.0,  0.0,     0.0,  1.0,  0.0,  0.4,
+          1.0,  1.0,  0.0,     0.0,  1.0,  0.0,  0.4
 
     };
 
@@ -207,33 +227,33 @@ int main(void)
     glBindVertexArray(VAO[8]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[8]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(5 * sizeof(float)));
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     //baterija1
     glBindVertexArray(VAO[9]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[9]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(5 * sizeof(float)));
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     //pravougaonik zeleno staklo
     glBindVertexArray(VAO[4]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[4]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(5 * sizeof(float)));
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     
@@ -314,235 +334,251 @@ int main(void)
   
     while (!glfwWindowShouldClose(window))
     {
+        glClearColor(0.80, 0.80, 0.0, 1.0);
 
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        {
-            glfwSetWindowShouldClose(window, GL_TRUE);
-        }
-
-
-        if (glfwGetKey(window, GLFW_KEY_1) && glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-        {
-            SwitchOnOff1 = 1;
-        }
-        else if (glfwGetKey(window, GLFW_KEY_1) && glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-        {
-            SwitchOnOff1 = 0;
-        }
-
-
-        if (glfwGetKey(window, GLFW_KEY_2) && glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-        {
-            SwitchOnOff2 = 1;
-        }
-        else if (glfwGetKey(window, GLFW_KEY_2) && glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-        {
-            SwitchOnOff2 = 0;
-        }
-
-
-        if (SwitchOnOff1 == 1) {
-            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        if (showSmallMap == 1) {
+            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             {
-                if (dy1 <= 1.8)
-                    dy1 += 0.001;
-                else LetelicaDeaktivirana1 = 1;
+                glfwSetWindowShouldClose(window, GL_TRUE);
             }
-            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            {
-                if (dy1 >= -0.07)
-                    dy1 -= 0.001;
-                else LetelicaDeaktivirana1 = 1;
-            }
-            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            {
-                if (dx1 <= 1.6)
-                    dx1 += 0.001;
-                else LetelicaDeaktivirana1 = 1;
-            }
-            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            {
-                if (dx1 >= -0.6)
-                    dx1 -= 0.001;
-                else LetelicaDeaktivirana1 = 1;
-            }
-        }
 
 
-        if (SwitchOnOff2 == 1) {
-            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            if (glfwGetKey(window, GLFW_KEY_1) && glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
             {
-                if (dy2 <= 1.8)
-                    dy2 += 0.001;
-                else LetelicaDeaktivirana2 = 1;
+                SwitchOnOff1 = 1;
             }
-            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            else if (glfwGetKey(window, GLFW_KEY_1) && glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
             {
-                if (dy2 >= -0.07)
-                    dy2 -= 0.001;
-                else LetelicaDeaktivirana2 = 1;
+                SwitchOnOff1 = 0;
             }
-            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-            {
-                if (dx2 <= 0.6)
-                    dx2 += 0.001;
-                else LetelicaDeaktivirana2 = 1;
-            }
-            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-            {
-                if (dx2 >= -1.6)
-                    dx2 -= 0.001;
-                else LetelicaDeaktivirana2 = 1;
-            }
-        }
 
-        //baterija
-        if (SwitchOnOff1 == 1) {
 
-            praznjenjeBat1 += 0.009;
-            if (praznjenjeBat1 > 250) {
+            if (glfwGetKey(window, GLFW_KEY_2) && glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+            {
+                SwitchOnOff2 = 1;
+            }
+            else if (glfwGetKey(window, GLFW_KEY_2) && glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+            {
+                SwitchOnOff2 = 0;
+            }
+
+
+            if (SwitchOnOff1 == 1) {
+                if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+                {
+                    if (dy1 <= 1.8)
+                        dy1 += 0.001;
+                    else LetelicaDeaktivirana1 = 1;
+                }
+                if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+                {
+                    if (dy1 >= -0.3)
+                        dy1 -= 0.001;
+                    else LetelicaDeaktivirana1 = 1;
+                }
+                if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+                {
+                    if (dx1 <= 1.6)
+                        dx1 += 0.001;
+                    else LetelicaDeaktivirana1 = 1;
+                }
+                if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+                {
+                    if (dx1 >= -0.6)
+                        dx1 -= 0.001;
+                    else LetelicaDeaktivirana1 = 1;
+                }
+            }
+
+
+            if (SwitchOnOff2 == 1) {
+                if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+                {
+                    if (dy2 <= 1.8)
+                        dy2 += 0.001;
+                    else LetelicaDeaktivirana2 = 1;
+                }
+                if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+                {
+                    if (dy2 >= -0.3)
+                        dy2 -= 0.001;
+                    else LetelicaDeaktivirana2 = 1;
+                }
+                if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+                {
+                    if (dx2 <= 0.6)
+                        dx2 += 0.001;
+                    else LetelicaDeaktivirana2 = 1;
+                }
+                if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+                {
+                    if (dx2 >= -1.6)
+                        dx2 -= 0.001;
+                    else LetelicaDeaktivirana2 = 1;
+                }
+            }
+
+            //baterija
+            if (SwitchOnOff1 == 1) {
+
+                praznjenjeBat1 += 0.009;
+                if (praznjenjeBat1 > 250) {
+                    LetelicaDeaktivirana1 = 1;
+                }
+            }
+            if (SwitchOnOff2 == 1) {
+
+                praznjenjeBat2 += 0.009;
+                if (praznjenjeBat2 > 250) {
+                    LetelicaDeaktivirana2 = 1;
+                }
+
+            }
+
+            //sudaranje letelica
+            double d = sqrt(((x1_center + dx1) - (x2_center + dx2)) * ((x1_center + dx1) - (x2_center + dx2)) + ((y1_center + dy1) - (y2_center + dy2)) * ((y1_center + dy1) - (y2_center + dy2)));
+            if (d < r1 + r2) {
                 LetelicaDeaktivirana1 = 1;
-            }
-        }
-        if (SwitchOnOff2 == 1) {
-
-            praznjenjeBat2 += 0.009;
-            if (praznjenjeBat2 > 250) {
                 LetelicaDeaktivirana2 = 1;
             }
 
-        }
+            //ulazak u zabranjenu zonu
+            double d1 = sqrt(((x1_center + dx1) - x_center) * ((x1_center + dx1) - x_center) + ((y1_center + dy1) - y_center) * ((y1_center + dy1) - y_center));
+            if (d1 < r1 + r3) {
+                LetelicaDeaktivirana1 = 1;
+            }
 
-        //sudaranje letelica
-        double d = sqrt(((x1_center + dx1) - (x2_center + dx2)) * ((x1_center + dx1) - (x2_center + dx2)) + ((y1_center + dy1) - (y2_center + dy2)) * ((y1_center + dy1) - (y2_center + dy2)));
-        if (d < r1 + r2) {
-            LetelicaDeaktivirana1 = 1;
-            LetelicaDeaktivirana2 = 1;
-        }
-
-        //ulazak u zabranjenu zonu
-        double d1 = sqrt(((x1_center + dx1) - x_center) * ((x1_center + dx1) - x_center) + ((y1_center + dy1) - y_center) * ((y1_center + dy1) - y_center));
-        if (d1 < r1 + r3) {
-            LetelicaDeaktivirana1 = 1;
-        }
-
-        double d2 = sqrt(((x2_center + dx2) - x_center) * ((x2_center + dx2) - x_center) + ((y2_center + dy2) - y_center) * ((y2_center + dy2) - y_center));
-        if (d2 < r2 + r3) {
-            LetelicaDeaktivirana2 = 1;
-        }
-
-      
-
-        glClearColor(0.0, 0.0, 0.80, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT); //brisemo depth buffer ovde
-        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //brisemo depth buffer ovde
+            double d2 = sqrt(((x2_center + dx2) - x_center) * ((x2_center + dx2) - x_center) + ((y2_center + dy2) - y_center) * ((y2_center + dy2) - y_center));
+            if (d2 < r2 + r3) {
+                LetelicaDeaktivirana2 = 1;
+            }
 
 
 
-
-        //pravougaonik tekstura mape
-        glViewport(wWidth/2 - mWidth/2, 0, mWidth, mHeight);//iscrtavanje prozora na sredini ekrana, smanjen
-        glUniform1i(UseTextLoc, 0);
-        glUseProgram(texShader);
-        glBindVertexArray(VAO[1]);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, checkerTexture1);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        //letelica1
-        if (LetelicaDeaktivirana1 == 0) {
-            glUseProgram(letShader);
-            glUniform4f(colorLocation, 0.36, 0.25, 0.83, 1.0);
-            glUniform2f(uPosLoc, dx1, dy1);
-            glBindVertexArray(VAO[2]);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle1) / (2 * sizeof(float)));
-        }
-
-        //letelice2
-        if (LetelicaDeaktivirana2 == 0) {
-            glUseProgram(letShader);
-            glUniform4f(colorLocation, 0.0, 0.6, 1.0, 1.0);
-            glUniform2f(uPosLoc, dx2, dy2);
-            glBindVertexArray(VAO[3]);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle2) / (2 * sizeof(float)));
-        }
-
-        //zabranjena zona
-        glUseProgram(letShader);
-        glUniform4f(colorLocation, 1.0, 0.0, 0.0, 0.5);
-        glUniform2f(uPosLoc, 0, 0);
-        glBindVertexArray(VAO[5]);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle3) / (2 * sizeof(float)));
-
-        //pravougaonik kontrl tbl
-        //glUseProgram(grayrectShader);
-        //glBindVertexArray(VAO[1]);
-        //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-      
-        //pravougaonik zeleno staklo
-        glUseProgram(grayrectShader);
-        glBindVertexArray(VAO[4]);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDrawArrays(GL_TRIANGLE_STRIP, 8, 4);
+            glClearColor(0.50, 0.0, 0.50, 1.0);
 
 
-        glViewport(0, 0, wWidth/2, wHeight);   //iscrtavanje prozora na levoj strani ekrana - kamera levog drona
-
-
-        //pravougaonik providna tekstura
-        glUniform1i(UseTextLoc, 1);
-        glUseProgram(texShader);
-        glBindVertexArray(VAO[0]);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, checkerTexture2);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        //baterija1
-        if (LetelicaDeaktivirana1 == 0) {
-            glUseProgram(batShader);
-            glUniform1f(batPosLoc, 360 - praznjenjeBat1);
-            glBindVertexArray(VAO[8]);
+            //pravougaonik tekstura mape
+            glViewport(wWidth / 2 - mWidth / 2, 0, mWidth, mHeight);//iscrtavanje prozora na sredini ekrana, smanjen
+            glUniform1i(UseTextLoc, 0);
+            glUseProgram(texShader);
+            glBindVertexArray(VAO[1]);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, checkerTexture1);
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        }
-        //dugme on/off 1
-        glUseProgram(buttonShader);
-        glUniform2f(uPosLoc, 0, 0);
-        if (LetelicaDeaktivirana1 == 1) {
-            SwitchOnOff1 = 0;
-        }
-        glUniform1i(switchLocation, SwitchOnOff1);
-        glBindVertexArray(VAO[6]);
-        glEnable(GL_PROGRAM_POINT_SIZE);
-        glPointSize(35);
-        glDrawArrays(GL_POINTS, 0, 1);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            //letelica1
+            if (LetelicaDeaktivirana1 == 0) {
+                glUseProgram(letShader);
+                glUniform4f(colorLocation, 0.36, 0.25, 0.83, 1.0);
+                glUniform2f(uPosLoc, dx1, dy1);
+                glBindVertexArray(VAO[2]);
+                glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle1) / (2 * sizeof(float)));
+            }
+
+            //letelice2
+            if (LetelicaDeaktivirana2 == 0) {
+                glUseProgram(letShader);
+                glUniform4f(colorLocation, 0.0, 0.6, 1.0, 1.0);
+                glUniform2f(uPosLoc, dx2, dy2);
+                glBindVertexArray(VAO[3]);
+                glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle2) / (2 * sizeof(float)));
+            }
+
+            //zabranjena zona
+            glUseProgram(letShader);
+            glUniform4f(colorLocation, 1.0, 0.0, 0.0, 0.5);
+            glUniform2f(uPosLoc, 0, 0);
+            glBindVertexArray(VAO[5]);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle3) / (2 * sizeof(float)));
+
+            //pravougaonik kontrl tbl
+            //glUseProgram(grayrectShader);
+            //glBindVertexArray(VAO[1]);
+            //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 
-        glViewport(wWidth / 2, 0, wWidth / 2, wHeight);   //iscrtavanje prozora na desnoj strani ekrana - kamera desnog drona
+            //pravougaonik zeleno staklo
+            glUseProgram(grayrectShader);
+            glBindVertexArray(VAO[4]);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDrawArrays(GL_TRIANGLE_STRIP, 8, 4);
 
-        //baterija2
-        if (LetelicaDeaktivirana2 == 0) {
-            glUseProgram(batShader);
-            glUniform1f(batPosLoc, 1500 - praznjenjeBat2);
-            glBindVertexArray(VAO[9]);
-            glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
-        }
-        //dugme on/off 2
-        glUseProgram(buttonShader);
-        glUniform2f(uPosLoc, 0, 0);
-        if (LetelicaDeaktivirana2 == 1) {
-            SwitchOnOff2 = 0;
-        }
-        glUniform1i(switchLocation, SwitchOnOff2);
-        glBindVertexArray(VAO[7]);
-        glEnable(GL_PROGRAM_POINT_SIZE);
-        glPointSize(35);
-        glDrawArrays(GL_POINTS, 0, 1);
 
-  
+            glViewport(0, 0, wWidth / 2, wHeight);   //iscrtavanje prozora na levoj strani ekrana - kamera levog drona
+
+
+            //pravougaonik providna tekstura
+            glUniform1i(UseTextLoc, 1);
+            glUseProgram(texShader);
+            glBindVertexArray(VAO[0]);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, checkerTexture2);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            //baterija1
+            if (LetelicaDeaktivirana1 == 0) {
+                glUseProgram(batShader);
+                glUniform1f(batPosLoc, 360 - praznjenjeBat1);
+                glBindVertexArray(VAO[8]);
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            }
+            //dugme on/off 1
+            glUseProgram(buttonShader);
+            glUniform2f(uPosLoc, 0, 0);
+            if (LetelicaDeaktivirana1 == 1) {
+                SwitchOnOff1 = 0;
+            }
+            glUniform1i(switchLocation, SwitchOnOff1);
+            glBindVertexArray(VAO[6]);
+            glEnable(GL_PROGRAM_POINT_SIZE);
+            glPointSize(35);
+            glDrawArrays(GL_POINTS, 0, 1);
+
+
+            glViewport(wWidth / 2, 0, wWidth / 2, wHeight);   //iscrtavanje prozora na desnoj strani ekrana - kamera desnog drona
+
+            //baterija2
+            if (LetelicaDeaktivirana2 == 0) {
+                glUseProgram(batShader);
+                glUniform1f(batPosLoc, 1500 - praznjenjeBat2);
+                glBindVertexArray(VAO[9]);
+                glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
+            }
+            //dugme on/off 2
+            glUseProgram(buttonShader);
+            glUniform2f(uPosLoc, 0, 0);
+            if (LetelicaDeaktivirana2 == 1) {
+                SwitchOnOff2 = 0;
+            }
+            glUniform1i(switchLocation, SwitchOnOff2);
+            glBindVertexArray(VAO[7]);
+            glEnable(GL_PROGRAM_POINT_SIZE);
+            glPointSize(35);
+            glDrawArrays(GL_POINTS, 0, 1);
+
+        }
+
+        glEnable(GL_DEPTH_TEST); //depth test
+
+        //glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //brisemo depth buffer ovde
+
+        glViewport(0, 0, wWidth / 2, wHeight);
+        DroneShader.setMat4("uM", model);
+        drone.Draw(DroneShader);
+
+        glViewport(wWidth / 2, 0, wWidth / 2, wHeight);
+        DroneShader.setMat4("uM", model);
+        drone.Draw(DroneShader);
+
+
+        glDisable(GL_DEPTH_TEST);
+
+
         glfwSwapBuffers(window);
         glfwPollEvents(); 
     }
