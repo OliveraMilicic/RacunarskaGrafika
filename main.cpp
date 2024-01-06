@@ -342,6 +342,9 @@ int main(void)
         //glClear(GL_COLOR_BUFFER_BIT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //brisemo depth buffer ovde
 
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
         glViewport(0, 0, wWidth / 2, wHeight);
 
         DroneShader.use();
@@ -352,7 +355,7 @@ int main(void)
         DroneShader.setMat4("uM", model);
         drone.Draw(DroneShader);
 
-
+        glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
 
 
