@@ -45,7 +45,7 @@ int main(void)
     unsigned int mHeight = 400; //dimenzije 2d mape majevice
     const char wTitle[] = "[Olivera Milicic AI 5/2022]";
     window = glfwCreateWindow(wWidth, wHeight, wTitle, NULL, NULL);
-    int showSmallMap = 0; //IZIGNORISEMO MALU 2D MAPU
+    int showSmallMap = 1; //IZIGNORISEMO MALU 2D MAPU
 
     if (window == NULL)
     {
@@ -335,6 +335,26 @@ int main(void)
     while (!glfwWindowShouldClose(window))
     {
         glClearColor(0.80, 0.80, 0.0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glEnable(GL_DEPTH_TEST); //depth test
+
+        //glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //brisemo depth buffer ovde
+
+        glViewport(0, 0, wWidth / 2, wHeight);
+
+        DroneShader.use();
+        DroneShader.setMat4("uM", model);
+        drone.Draw(DroneShader);
+
+        glViewport(wWidth / 2, 0, wWidth / 2, wHeight);
+        DroneShader.setMat4("uM", model);
+        drone.Draw(DroneShader);
+
+
+        glDisable(GL_DEPTH_TEST);
+
 
         if (showSmallMap == 1) {
             if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -455,7 +475,7 @@ int main(void)
 
 
 
-            glClearColor(0.50, 0.0, 0.50, 1.0);
+            //glClearColor(0.50, 0.0, 0.50, 1.0);
 
 
             //pravougaonik tekstura mape
@@ -562,22 +582,7 @@ int main(void)
 
         }
 
-        glEnable(GL_DEPTH_TEST); //depth test
-
-        //glClear(GL_COLOR_BUFFER_BIT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //brisemo depth buffer ovde
-
-        glViewport(0, 0, wWidth / 2, wHeight);
-        DroneShader.setMat4("uM", model);
-        drone.Draw(DroneShader);
-
-        glViewport(wWidth / 2, 0, wWidth / 2, wHeight);
-        DroneShader.setMat4("uM", model);
-        drone.Draw(DroneShader);
-
-
-        glDisable(GL_DEPTH_TEST);
-
+       
 
         glfwSwapBuffers(window);
         glfwPollEvents(); 
