@@ -85,19 +85,34 @@ int main(void)
 
     //*******************************    UNIFORME    ********************************
     //perspektiva
-    glm::mat4 projection = glm::perspective(glm::radians(75.0f), (float)wWidth / (float)wHeight, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)wWidth / (float)wHeight, 0.1f, 100.0f);
     ModelShader.setMat4("uP", projection);
 
-
-    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 5.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     ModelShader.setMat4("uV", view);
+
+    //teren
+    
+    //glm::mat4 view = glm::mat4(1.0f);
+    //glm::mat4 projection = glm::mat4(1.0f);
+    //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    //projection = glm::perspective(glm::radians(45.0f), (float)wWidth / 2 / (float)wHeight, 0.1f, 100.0f);
+
+    glm::mat4 modelMapa = glm::mat4(1.0f);
+    glm::vec3 newCoordinates = glm::vec3(0.0, -5.0, -30.0); //minus ispred Z da bi islo dalje od nas
+    modelMapa = glm::translate(glm::mat4(1.0f), newCoordinates);
+    modelMapa = glm::rotate(modelMapa, glm::radians(0.5f), glm::vec3(-10.0f, 0.0f, 0.0f));
+
+    unsigned int modelLoc = glGetUniformLocation(unifiedShader, "uM");
+
+    glUseProgram(unifiedShader); //Slanje default vrijednosti uniformi
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMapa));
+
 
     //dron1
     glm::mat4 modelDron1 = glm::mat4(1.0f); //Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
     glm::vec3 newCoordinates1 = glm::vec3(-4.0, 0.0, 0.0); //pocetne koordinate levog drona
     modelDron1 = glm::translate(glm::mat4(1.0f), newCoordinates1);
-
-    unsigned int modelLoc = glGetUniformLocation(unifiedShader, "uM");
 
     glUseProgram(unifiedShader); //Slanje default vrijednosti uniformi
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1)); //(Adresa matrice, broj matrica koje saljemo, da li treba da se transponuju, pokazivac do matrica)
@@ -322,7 +337,7 @@ int main(void)
   
     while (!glfwWindowShouldClose(window))
     {
-        glClearColor(0.80, 0.80, 0.0, 1.0);
+        glClearColor(0.0, 0.0, 0.80, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glEnable(GL_DEPTH_TEST); //depth test
@@ -337,21 +352,16 @@ int main(void)
         ModelShader.use();
 
         //ucitavanje terena
-        glm::mat4 modelMapa = glm::mat4(1.0f);
-        //glm::mat4 view = glm::mat4(1.0f);
-        //glm::mat4 projection = glm::mat4(1.0f);
-        modelMapa = glm::rotate(modelMapa, glm::radians(0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
-        //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-        //projection = glm::perspective(glm::radians(45.0f), (float)wWidth / 2 / (float)wHeight, 0.1f, 100.0f);
+        
 
         ModelShader.setMat4("uM", modelMapa);
-        //teren.Draw(ModelShader);
+        teren.Draw(ModelShader);
 
 
         //ucitavanje drona 1
         ModelShader.setMat4("uM", modelDron1);
         drone.Draw(ModelShader);
-
+        //pomeranje drona 1
         if (SwitchOnOff1 == 1) {
             //pomeranje drona levo desno, napred nazad
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
