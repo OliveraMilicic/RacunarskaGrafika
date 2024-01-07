@@ -92,18 +92,24 @@ int main(void)
     glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     ModelShader.setMat4("uV", view);
 
-
-    glm::mat4 model = glm::mat4(1.0f); //Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
-
-    glm::vec3 newCoordinates = glm::vec3(-5.0, 0.0, 0.0); //pocetne koordinate levog drona
-    model = glm::translate(glm::mat4(1.0f), newCoordinates);
+    //dron1
+    glm::mat4 modelDron1 = glm::mat4(1.0f); //Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
+    glm::vec3 newCoordinates1 = glm::vec3(-4.0, 0.0, 0.0); //pocetne koordinate levog drona
+    modelDron1 = glm::translate(glm::mat4(1.0f), newCoordinates1);
 
     unsigned int modelLoc = glGetUniformLocation(unifiedShader, "uM");
 
     glUseProgram(unifiedShader); //Slanje default vrijednosti uniformi
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); //(Adresa matrice, broj matrica koje saljemo, da li treba da se transponuju, pokazivac do matrica)
-    //glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    //glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionO));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1)); //(Adresa matrice, broj matrica koje saljemo, da li treba da se transponuju, pokazivac do matrica)
+    
+
+    //dron2
+    glm::mat4 modelDron2 = glm::mat4(1.0f);
+    glm::vec3 newCoordinates2 = glm::vec3(4.0, 0.0, 0.0); 
+    modelDron2 = glm::translate(glm::mat4(1.0f), newCoordinates2);
+
+    glUseProgram(unifiedShader);
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
 
 
 
@@ -170,19 +176,6 @@ int main(void)
     float x_center = 0.45;
     float y_center = 0.4;
     createAndUpdateCircle(r3, x_center, y_center, VAO[5], VBO[5]);
-
-    /*circle3[0] = x_center; 
-    circle3[1] = y_center; 
-    for (int i = 0; i <= CRES; i++)
-    {
-        circle3[2 + 2 * i] = x_center + r3 * cos((3.141592 / 180) * (i * 360 / CRES));
-        circle3[2 + 2 * i + 1] = y_center + r3 * sin((3.141592 / 180) * (i * 360 / CRES));
-    }
-    glBindVertexArray(VAO[5]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[5]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(circle3), circle3, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);*/
 
 
 
@@ -356,54 +349,107 @@ int main(void)
 
 
         //ucitavanje drona 1
-        ModelShader.setMat4("uM", model);
+        ModelShader.setMat4("uM", modelDron1);
         drone.Draw(ModelShader);
 
         if (SwitchOnOff1 == 1) {
             //pomeranje drona levo desno, napred nazad
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
             {
-                model = glm::translate(model, glm::vec3(-0.01, 0.0, 0.0)); //Pomeranje (Matrica transformacije, pomeraj po XYZ)
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+                modelDron1 = glm::translate(modelDron1, glm::vec3(-0.01, 0.0, 0.0)); //Pomeranje (Matrica transformacije, pomeraj po XYZ)
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
             }
             if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             {
-                model = glm::translate(model, glm::vec3(0.01, 0.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+                modelDron1 = glm::translate(modelDron1, glm::vec3(0.01, 0.0, 0.0));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
             }
             if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             {
-                model = glm::translate(model, glm::vec3(0.0, 0.0, -0.01));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+                modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.0, -0.01));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
             }
             if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
             {
-                model = glm::translate(model, glm::vec3(0.0, 0.0, 0.01));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+                modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.0, 0.01));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
             }
             //pomeranje gore dole
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             {
-                model = glm::translate(model, glm::vec3(0.0, 0.01, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+                modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.01, 0.0));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
             }
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
             {
-                model = glm::translate(model, glm::vec3(0.0, -0.01, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+                modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, -0.01, 0.0));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
             }
             //rotiranje levo desno
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
             {
-                model = glm::rotate(model, glm::radians(0.5f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+                modelDron1 = glm::rotate(modelDron1, glm::radians(0.5f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
             }
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             {
-                model = glm::rotate(model, glm::radians(-0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+                modelDron1 = glm::rotate(modelDron1, glm::radians(-0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
             }
         }
+
+
+        //ucitavanje drona 2
+        ModelShader.setMat4("uM", modelDron2);
+        drone.Draw(ModelShader);
+
+        if (SwitchOnOff2 == 1) {
+            //pomeranje drona levo desno, napred nazad
+            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            {
+                modelDron2 = glm::translate(modelDron2, glm::vec3(-0.01, 0.0, 0.0)); //Pomeranje (Matrica transformacije, pomeraj po XYZ)
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            }
+            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            {
+                modelDron2 = glm::translate(modelDron2, glm::vec3(0.01, 0.0, 0.0));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            }
+            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            {
+                modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, 0.0, -0.01));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            }
+            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            {
+                modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, 0.0, 0.01));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            }
+            //pomeranje gore dole
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            {
+                modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, 0.01, 0.0));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            }
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            {
+                modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, -0.01, 0.0));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            }
+            //rotiranje levo desno
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            {
+                modelDron2 = glm::rotate(modelDron2, glm::radians(0.5f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            }
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            {
+                modelDron2 = glm::rotate(modelDron2, glm::radians(-0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            }
+        }
+
+
 
         //****************************   LEVI EKRAN KAMERA   *****************************
         glViewport(0, 0, wWidth / 2, wHeight); 
@@ -413,11 +459,6 @@ int main(void)
 
         //****************************   DESNI EKRAN KAMERA   *****************************
         glViewport(wWidth / 2, 0, wWidth / 2, wHeight);
-
-
-        //ucitavanje drona 2
-        ModelShader.setMat4("uM", model);
-        //drone.Draw(ModelShader);
 
 
 
@@ -483,16 +524,17 @@ int main(void)
                         else LetelicaDeaktivirana1 = 1;
                     }
                 }
+                //smanjivanje i povecavanje kruga na 2D mapi
                 else {
                     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
                     {
-                        r1 += 0.001;
+                        r1 += 0.0005;
                         createAndUpdateCircle(r1, x1_center, y1_center, VAO[2], VBO[2]);
 
                     }
                     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
                     {
-                        r1 -= 0.001;
+                        r1 -= 0.0005;
                         createAndUpdateCircle(r1, x1_center, y1_center, VAO[2], VBO[2]);
 
                     }
@@ -501,30 +543,47 @@ int main(void)
 
 
             if (SwitchOnOff2 == 1) {
-                if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-                {
-                    if (dy2 <= 1.8)
-                        dy2 += 0.001;
-                    else LetelicaDeaktivirana2 = 1;
+                if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS) {
+                    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+                    {
+                        if (dy2 <= 1.8)
+                            dy2 += 0.001;
+                        else LetelicaDeaktivirana2 = 1;
+                    }
+                    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+                    {
+                        if (dy2 >= -0.3)
+                            dy2 -= 0.001;
+                        else LetelicaDeaktivirana2 = 1;
+                    }
+                    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+                    {
+                        if (dx2 <= 0.6)
+                            dx2 += 0.001;
+                        else LetelicaDeaktivirana2 = 1;
+                    }
+                    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+                    {
+                        if (dx2 >= -1.6)
+                            dx2 -= 0.001;
+                        else LetelicaDeaktivirana2 = 1;
+                    }
                 }
-                if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-                {
-                    if (dy2 >= -0.3)
-                        dy2 -= 0.001;
-                    else LetelicaDeaktivirana2 = 1;
-                }
-                if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-                {
-                    if (dx2 <= 0.6)
-                        dx2 += 0.001;
-                    else LetelicaDeaktivirana2 = 1;
-                }
-                if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-                {
-                    if (dx2 >= -1.6)
-                        dx2 -= 0.001;
-                    else LetelicaDeaktivirana2 = 1;
-                }
+                    //smanjivanje i povecavanje kruga na 2D mapi
+                    else {
+                        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+                        {
+                            r2 += 0.0005;
+                            createAndUpdateCircle(r2, x2_center, y2_center, VAO[3], VBO[3]);
+
+                        }
+                        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+                        {
+                            r2 -= 0.0005;
+                            createAndUpdateCircle(r2, x2_center, y2_center, VAO[3], VBO[3]);
+
+                        }
+                    }
             }
 
             //baterija
