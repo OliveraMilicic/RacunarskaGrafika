@@ -22,7 +22,7 @@ unsigned int compileShader(GLenum type, const char* source);
 unsigned int createShader(const char* vsSource, const char* fsSource);
 static unsigned loadImageToTexture(const char* Majevica);
 static unsigned loadImageToTexture(const char* Providna);
-
+void createAndUpdateCircle(float radius, float centerX, float centerY, unsigned int VAO, unsigned int VBO);
 
 int main(void)
 {
@@ -94,6 +94,10 @@ int main(void)
 
 
     glm::mat4 model = glm::mat4(1.0f); //Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
+
+    glm::vec3 newCoordinates = glm::vec3(-5.0, 0.0, 0.0); //pocetne koordinate levog drona
+    model = glm::translate(glm::mat4(1.0f), newCoordinates);
+
     unsigned int modelLoc = glGetUniformLocation(unifiedShader, "uM");
 
     glUseProgram(unifiedShader); //Slanje default vrijednosti uniformi
@@ -148,58 +152,28 @@ int main(void)
     //letelica1
     float circle1[CRES * 2 + 4]; // +4 je za x i y koordinate centra kruga, i za x i y od nultog ugla
     float r1 = 0.03; //poluprecnik
-
     float x1_center = -0.45;
     float y1_center = -0.7;
-
-
-    circle1[0] = x1_center; //Centar X0
-    circle1[1] = y1_center; //Centar Y0
-    int i;
-    for (i = 0; i <= CRES; i++)
-    {
-        circle1[2 + 2 * i] = x1_center + r1 * cos((3.141592 / 180) * (i * 360 / CRES)); //Xi
-        circle1[2 + 2 * i + 1] = y1_center + r1 * sin((3.141592 / 180) * (i * 360 / CRES)); //Yi
-    }
-
-    glBindVertexArray(VAO[2]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(circle1), circle1, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-
+    createAndUpdateCircle(r1, x1_center, y1_center, VAO[2], VBO[2]);
+        
     //letelica2
     float circle2[CRES * 2 + 4]; // +4 je za x i y koordinate centra kruga, i za x i y od nultog ugla
     float r2 = 0.03; //poluprecnik
-
     float x2_center = 0.45;
     float y2_center = -0.7;
+    createAndUpdateCircle(r2, x2_center, y2_center, VAO[3], VBO[3]);
 
-
-    circle2[0] = x2_center; //Centar X0
-    circle2[1] = y2_center; //Centar Y0
-    for (i = 0; i <= CRES; i++)
-    {
-        circle2[2 + 2 * i] = x2_center + r2 * cos((3.141592 / 180) * (i * 360 / CRES)); //Xi
-        circle2[2 + 2 * i + 1] = y2_center + r2 * sin((3.141592 / 180) * (i * 360 / CRES)); //Yi
-    }
-
-    glBindVertexArray(VAO[3]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(circle2), circle2, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
 
     //zabranjena zona
     float circle3[CRES * 2 + 4];
     float r3 = 0.2;
     float x_center = 0.45;
     float y_center = 0.4;
+    createAndUpdateCircle(r3, x_center, y_center, VAO[5], VBO[5]);
 
-    circle3[0] = x_center; 
+    /*circle3[0] = x_center; 
     circle3[1] = y_center; 
-    for (i = 0; i <= CRES; i++)
+    for (int i = 0; i <= CRES; i++)
     {
         circle3[2 + 2 * i] = x_center + r3 * cos((3.141592 / 180) * (i * 360 / CRES));
         circle3[2 + 2 * i + 1] = y_center + r3 * sin((3.141592 / 180) * (i * 360 / CRES));
@@ -208,7 +182,7 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, VBO[5]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(circle3), circle3, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(0);*/
 
 
 
@@ -352,7 +326,6 @@ int main(void)
 
 
 
-
   
     while (!glfwWindowShouldClose(window))
     {
@@ -382,7 +355,7 @@ int main(void)
         //teren.Draw(ModelShader);
 
 
-        //ucitavanje drona
+        //ucitavanje drona 1
         ModelShader.setMat4("uM", model);
         drone.Draw(ModelShader);
 
@@ -432,16 +405,17 @@ int main(void)
             }
         }
 
-        //****************************LEVI EKRAN*****************************
+        //****************************   LEVI EKRAN KAMERA   *****************************
         glViewport(0, 0, wWidth / 2, wHeight); 
 
 
 
 
-        //****************************DESNI EKRAN*****************************
+        //****************************   DESNI EKRAN KAMERA   *****************************
         glViewport(wWidth / 2, 0, wWidth / 2, wHeight);
 
-        //ucitavanje drona
+
+        //ucitavanje drona 2
         ModelShader.setMat4("uM", model);
         //drone.Draw(ModelShader);
 
@@ -482,29 +456,46 @@ int main(void)
 
 
             if (SwitchOnOff1 == 1) {
-                if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-                {
-                    if (dy1 <= 1.8)
-                        dy1 += 0.001;
-                    else LetelicaDeaktivirana1 = 1;
+                if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS) {  //ako nije pritusnut CNTRL onda izvrsavaj
+
+                    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+                    {
+                        if (dy1 <= 1.8)
+                            dy1 += 0.001;
+                        else LetelicaDeaktivirana1 = 1;
+                    }
+                    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+                    {
+                        if (dy1 >= -0.3)
+                            dy1 -= 0.001;
+                        else LetelicaDeaktivirana1 = 1;
+                    }
+                    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+                    {
+                        if (dx1 <= 1.6)
+                            dx1 += 0.001;
+                        else LetelicaDeaktivirana1 = 1;
+                    }
+                    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+                    {
+                        if (dx1 >= -0.6)
+                            dx1 -= 0.001;
+                        else LetelicaDeaktivirana1 = 1;
+                    }
                 }
-                if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-                {
-                    if (dy1 >= -0.3)
-                        dy1 -= 0.001;
-                    else LetelicaDeaktivirana1 = 1;
-                }
-                if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-                {
-                    if (dx1 <= 1.6)
-                        dx1 += 0.001;
-                    else LetelicaDeaktivirana1 = 1;
-                }
-                if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-                {
-                    if (dx1 >= -0.6)
-                        dx1 -= 0.001;
-                    else LetelicaDeaktivirana1 = 1;
+                else {
+                    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+                    {
+                        r1 += 0.001;
+                        createAndUpdateCircle(r1, x1_center, y1_center, VAO[2], VBO[2]);
+
+                    }
+                    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+                    {
+                        r1 -= 0.001;
+                        createAndUpdateCircle(r1, x1_center, y1_center, VAO[2], VBO[2]);
+
+                    }
                 }
             }
 
@@ -698,6 +689,28 @@ int main(void)
     glfwTerminate();
     return 0;
 }
+
+
+ void createAndUpdateCircle(float radius, float centerX, float centerY, unsigned int VAO, unsigned int VBO) {
+     float circle[CRES * 2 + 4]; // Array to hold circle vertices
+
+     // Set center coordinates of the circle
+     circle[0] = centerX; // Center X
+     circle[1] = centerY; // Center Y
+
+     // Calculate circle vertices
+     for (int i = 0; i <= CRES; i++) {
+         circle[2 + 2 * i] = centerX + radius * cos((3.141592 / 180) * (i * 360 / CRES));
+         circle[2 + 2 * i + 1] = centerY + radius * sin((3.141592 / 180) * (i * 360 / CRES));
+     }
+
+     // Bind and update VAO and VBO
+     glBindVertexArray(VAO);
+     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+     glBufferData(GL_ARRAY_BUFFER, sizeof(circle), circle, GL_STATIC_DRAW);
+     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+     glEnableVertexAttribArray(0);
+ }
 
 unsigned int compileShader(GLenum type, const char* source)
 {
