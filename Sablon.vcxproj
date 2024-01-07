@@ -145,8 +145,8 @@
   <ItemGroup>
     <None Include="bat.frag" />
     <None Include="bat.vert" />
-    <None Include="drone.frag" />
-    <None Include="drone.vert" />
+    <None Include="object.frag" />
+    <None Include="object.vert" />
     <None Include="indikator.frag" />
     <None Include="let.frag" />
     <None Include="let.vert" />

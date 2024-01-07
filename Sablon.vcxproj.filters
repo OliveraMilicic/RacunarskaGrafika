@@ -30,8 +30,8 @@
     <None Include="indikator.frag" />
     <None Include="bat.vert" />
     <None Include="bat.frag" />
-    <None Include="drone.vert" />
-    <None Include="drone.frag" />
+    <None Include="object.vert" />
+    <None Include="object.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\Providna.png">

@@ -24,7 +24,6 @@ static unsigned loadImageToTexture(const char* Majevica);
 static unsigned loadImageToTexture(const char* Providna);
 
 
-
 int main(void)
 {
 
@@ -45,7 +44,7 @@ int main(void)
     unsigned int mHeight = 400; //dimenzije 2d mape majevice
     const char wTitle[] = "[Olivera Milicic AI 5/2022]";
     window = glfwCreateWindow(wWidth, wHeight, wTitle, NULL, NULL);
-    int showSmallMap = 1; //IZIGNORISEMO MALU 2D MAPU
+    int showSmallMap = 1; //IZIGNORISEMO MALU 2D MAPU sa =0
 
     if (window == NULL)
     {
@@ -62,29 +61,50 @@ int main(void)
         return 3;
     }
  
-    //**********************************************UCITAVANJE*MODELA******************************************************
-    Model drone("res/dron.obj");
-
-    Shader DroneShader("drone.vert", "drone.frag");
-
-    DroneShader.use();
-    DroneShader.setVec3("uLightPos", 0, 1, 3);
-    DroneShader.setVec3("uViewPos", 0, 0, 5);
-    DroneShader.setVec3("uLightColor", 1, 1, 1);
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)wWidth / (float)wHeight, 0.1f, 100.0f);
-    DroneShader.setMat4("uP", projection);
-    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    DroneShader.setMat4("uV", view);
-    glm::mat4 model = glm::mat4(1.0f);
-
-
     //shaderi
     unsigned int texShader = createShader("tex.vert", "tex.frag");
     unsigned int letShader = createShader("let.vert", "let.frag");
     unsigned int grayrectShader = createShader("rect.vert", "rectgray.frag");
     unsigned int buttonShader = createShader("let.vert", "indikator.frag");
     unsigned int batShader = createShader("bat.vert", "bat.frag");
+    unsigned int unifiedShader = createShader("object.vert", "object.frag");
 
+
+    //**********************************************   UCITAVANJE  MODELA   ******************************************************
+    Model teren("res/teren.obj");
+    Model drone("res/dron.obj");
+
+
+    Shader ModelShader("object.vert", "object.frag");
+
+    ModelShader.use();
+    ModelShader.setVec3("uLightPos", 0, 1, 3);
+    ModelShader.setVec3("uViewPos", 0, 0, 5);
+    ModelShader.setVec3("uLightColor", 1, 1, 1);
+
+
+    //*******************************    UNIFORME    ********************************
+    //perspektiva
+    glm::mat4 projection = glm::perspective(glm::radians(75.0f), (float)wWidth / (float)wHeight, 0.1f, 100.0f);
+    ModelShader.setMat4("uP", projection);
+
+
+    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    ModelShader.setMat4("uV", view);
+
+
+    glm::mat4 model = glm::mat4(1.0f); //Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
+    unsigned int modelLoc = glGetUniformLocation(unifiedShader, "uM");
+
+    glUseProgram(unifiedShader); //Slanje default vrijednosti uniformi
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); //(Adresa matrice, broj matrica koje saljemo, da li treba da se transponuju, pokazivac do matrica)
+    //glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    //glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionO));
+
+
+
+
+    
 
     const int n = 10;
 
@@ -318,7 +338,6 @@ int main(void)
 
     
 
-
     float dx1 = 0;
     float dy1 = 0;
     float dx2 = 0;
@@ -331,6 +350,9 @@ int main(void)
     int LetelicaDeaktivirana1 = 0;
     int LetelicaDeaktivirana2 = 0;
 
+
+
+
   
     while (!glfwWindowShouldClose(window))
     {
@@ -338,22 +360,95 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glEnable(GL_DEPTH_TEST); //depth test
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //brisemo depth buffer ovde
 
-        //glClear(GL_COLOR_BUFFER_BIT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //brisemo depth buffer ovde
-
-        glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE); //culling
         glCullFace(GL_BACK);
 
-        glViewport(0, 0, wWidth / 2, wHeight);
+        //*************************CEO EKRAN**********************************
+        glViewport(0, 0, wWidth, wHeight);
+        //koristimo ovaj shader za ucitavanje modela
+        ModelShader.use();
 
-        DroneShader.use();
-        DroneShader.setMat4("uM", model);
-        drone.Draw(DroneShader);
+        //ucitavanje terena
+        glm::mat4 modelMapa = glm::mat4(1.0f);
+        //glm::mat4 view = glm::mat4(1.0f);
+        //glm::mat4 projection = glm::mat4(1.0f);
+        modelMapa = glm::rotate(modelMapa, glm::radians(0.5f), glm::vec3(1.0f, 0.0f, 0.0f));
+        //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        //projection = glm::perspective(glm::radians(45.0f), (float)wWidth / 2 / (float)wHeight, 0.1f, 100.0f);
 
+        ModelShader.setMat4("uM", modelMapa);
+        //teren.Draw(ModelShader);
+
+
+        //ucitavanje drona
+        ModelShader.setMat4("uM", model);
+        drone.Draw(ModelShader);
+
+        if (SwitchOnOff1 == 1) {
+            //pomeranje drona levo desno, napred nazad
+            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            {
+                model = glm::translate(model, glm::vec3(-0.01, 0.0, 0.0)); //Pomeranje (Matrica transformacije, pomeraj po XYZ)
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            }
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            {
+                model = glm::translate(model, glm::vec3(0.01, 0.0, 0.0));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            }
+            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            {
+                model = glm::translate(model, glm::vec3(0.0, 0.0, -0.01));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            }
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            {
+                model = glm::translate(model, glm::vec3(0.0, 0.0, 0.01));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            }
+            //pomeranje gore dole
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            {
+                model = glm::translate(model, glm::vec3(0.0, 0.01, 0.0));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            }
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            {
+                model = glm::translate(model, glm::vec3(0.0, -0.01, 0.0));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            }
+            //rotiranje levo desno
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            {
+                model = glm::rotate(model, glm::radians(0.5f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            }
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            {
+                model = glm::rotate(model, glm::radians(-0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            }
+        }
+
+        //****************************LEVI EKRAN*****************************
+        glViewport(0, 0, wWidth / 2, wHeight); 
+
+
+
+
+        //****************************DESNI EKRAN*****************************
         glViewport(wWidth / 2, 0, wWidth / 2, wHeight);
-        DroneShader.setMat4("uM", model);
-        drone.Draw(DroneShader);
+
+        //ucitavanje drona
+        ModelShader.setMat4("uM", model);
+        //drone.Draw(ModelShader);
+
+
+
+
+
 
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
