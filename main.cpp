@@ -82,14 +82,34 @@ int main(void)
     ModelShader.setVec3("uViewPos", 0, 0, 5);
     ModelShader.setVec3("uLightColor", 1, 1, 1);
 
+    //spekularna mapa --- PROVERITI DA LI RADI
+    unsigned specularMap = loadImageToTexture("res/Majevica_specular.png");
+    glActiveTexture(GL_TEXTURE1); // Use a different texture unit than the diffuse map
+    glBindTexture(GL_TEXTURE_2D, specularMap); // Bind the specular map
+    ModelShader.setInt("uSpecMap", 1); // Set the shader uniform
+
 
     //*******************************    UNIFORME    ********************************
     //perspektiva
     glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)wWidth / (float)wHeight, 0.1f, 100.0f);
     ModelShader.setMat4("uP", projection);
 
-    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 5.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    //camera
+    glm::vec3 cameraPos = glm::vec3(-4.0f, -3.0f, 0.0f);
+    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    float cameraSpeed = 0.01f;
+    float pitch = 0.0f; //Pitch is the angle that shows how much the camera is looking up or down
+    float yaw = -90.0f; //Yaw is the angle that shows how much the camera is looking left or right
+
+    float deltaTime = 0.0f;	// Time between current frame and last frame
+    float lastFrame = 0.0f; // Time of last frame
+
+
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    //glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 5.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     ModelShader.setMat4("uV", view);
+
 
     //teren
     
@@ -337,6 +357,10 @@ int main(void)
   
     while (!glfwWindowShouldClose(window))
     {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         glClearColor(0.0, 0.0, 0.80, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -348,12 +372,11 @@ int main(void)
 
         //*************************CEO EKRAN**********************************
         glViewport(0, 0, wWidth, wHeight);
+
         //koristimo ovaj shader za ucitavanje modela
         ModelShader.use();
 
         //ucitavanje terena
-        
-
         ModelShader.setMat4("uM", modelMapa);
         teren.Draw(ModelShader);
 
@@ -362,27 +385,33 @@ int main(void)
         ModelShader.setMat4("uM", modelDron1);
         drone.Draw(ModelShader);
         //pomeranje drona 1
+
         if (SwitchOnOff1 == 1) {
+            float cameraSpeed = 2.5f * deltaTime;
             //pomeranje drona levo desno, napred nazad
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
             {
                 modelDron1 = glm::translate(modelDron1, glm::vec3(-0.01, 0.0, 0.0)); //Pomeranje (Matrica transformacije, pomeraj po XYZ)
                 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
+                cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
             }
             if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             {
                 modelDron1 = glm::translate(modelDron1, glm::vec3(0.01, 0.0, 0.0));
                 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
+                cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
             }
             if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             {
                 modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.0, -0.01));
                 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
+                cameraPos += cameraSpeed * cameraFront;
             }
             if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
             {
                 modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.0, 0.01));
                 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
+                cameraPos -= cameraSpeed * cameraFront;
             }
             //pomeranje gore dole
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -463,7 +492,8 @@ int main(void)
 
         //****************************   LEVI EKRAN KAMERA   *****************************
         glViewport(0, 0, wWidth / 2, wHeight); 
-
+        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        ModelShader.setMat4("uV", view);
 
 
 
