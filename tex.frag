@@ -6,6 +6,7 @@ in vec2 chTex;
 
 uniform sampler2D uTex1;
 uniform sampler2D uTex2;
+uniform sampler2D uTex3;
 uniform int usetexture = 0;
 
 
@@ -15,4 +16,7 @@ void main()
             outCol = texture(uTex1, chTex);
         if (usetexture == 1)
             outCol = texture(uTex2, chTex);
+        if (usetexture == 2)
+            outCol = texture(uTex3, chTex);
+          
 }

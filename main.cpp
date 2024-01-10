@@ -95,24 +95,34 @@ int main(void)
     ModelShader.setMat4("uP", projection);
 
 
-    //camera
-    glm::vec3 cameraPos = glm::vec3(-4.0f, -2.0f, 0.0f);
-    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    //camera1
+    glm::vec3 cameraPos1 = glm::vec3(-4.0f, -2.0f, 0.0f);
+    glm::vec3 cameraFront1 = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 cameraUp1 = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    //camera2
+    glm::vec3 cameraPos2 = glm::vec3(4.0f, -2.0f, 0.0f);
+    glm::vec3 cameraFront2 = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 cameraUp2 = glm::vec3(0.0f, 1.0f, 0.0f);
+
     float cameraSpeed = 0.01f;
     float pitch = 0.0f; //Pitch is the angle that shows how much the camera is looking up or down
-    float yaw = -90.0f; //Yaw is the angle that shows how much the camera is looking left or right
+    float yaw1 = -90.0f; //Yaw is the angle that shows how much the camera is looking left or right
     // pocetni yaw je u pravcu pozitivne x ose, pa ako zelimo da gleda pravo treba -90
-    float sensitivity = 0.05f; // Sensitivity of the camera rotation
+    float yaw2 = -90.0f;
+    float sensitivity = 0.1f; // Sensitivity of the camera rotation
 
     float deltaTime = 0.0f;	// Time between current frame and last frame
     float lastFrame = 0.0f; // Time of last frame
 
-
-
-    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    glm::mat4 view1 = glm::lookAt(cameraPos1, cameraPos1 + cameraFront1, cameraUp1);
     //glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 5.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    ModelShader.setMat4("uV", view);
+    ModelShader.setMat4("uV", view1);
+
+    glm::mat4 view2 = glm::lookAt(cameraPos2, cameraPos2 + cameraFront2, cameraUp2);
+    //glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 5.0f, 7.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    ModelShader.setMat4("uV", view2);
+
 
 
     //teren
@@ -151,11 +161,7 @@ int main(void)
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
 
 
-
-
-    
-
-    const int n = 10;
+    const int n = 11;
 
     unsigned int VAO[n];
     glGenVertexArrays(n, VAO);
@@ -186,6 +192,15 @@ int main(void)
     //pravougaonik tekstura mape
     glBindVertexArray(VAO[1]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    //NOISE 
+    glBindVertexArray(VAO[10]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[10]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
@@ -317,7 +332,6 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
-
     unsigned uTexLoc1 = glGetUniformLocation(texShader, "uTex1");
     glUniform1i(uTexLoc1, 0);
 
@@ -330,13 +344,25 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
-
     unsigned uTexLoc2 = glGetUniformLocation(texShader, "uTex2");
     glUniform1i(uTexLoc2, 1);
+
+    //tekstura noise
+    unsigned checkerTexture3 = loadImageToTexture("res/static_noise.png");
+    glBindTexture(GL_TEXTURE_2D, checkerTexture3);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    unsigned uTexLoc3 = glGetUniformLocation(texShader, "uTex3");
+    glUniform1i(uTexLoc2, 2);
+
+
+
+
     unsigned UseTextLoc = glGetUniformLocation(texShader, "usetexture");
-
-
-
     unsigned uPosLoc = glGetUniformLocation(letShader, "uPos");
     unsigned colorLocation = glGetUniformLocation(letShader, "uColor");
     unsigned switchLocation = glGetUniformLocation(buttonShader, "swOnOff");
@@ -355,12 +381,13 @@ int main(void)
     int SwitchOnOff2 = 0;
     int LetelicaDeaktivirana1 = 0;
     int LetelicaDeaktivirana2 = 0;
-
-
-
+    int CameraActive1 = 1;
+    int CameraActive2 = 1;
+   
   
     while (!glfwWindowShouldClose(window))
     {
+        cameraSpeed = 2.5f * deltaTime;
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -380,43 +407,35 @@ int main(void)
         //koristimo ovaj shader za ucitavanje modela
         ModelShader.use();
 
-        //ucitavanje terena
-        ModelShader.setMat4("uM", modelMapa);
-        teren.Draw(ModelShader);
 
-
-        //ucitavanje drona 1
-        ModelShader.setMat4("uM", modelDron1);
-        drone.Draw(ModelShader);
         //pomeranje drona 1
-
         if (SwitchOnOff1 == 1) {
-            float cameraSpeed = 2.5f * deltaTime;
+         
             //pomeranje drona levo desno, napred nazad
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS) {
                 if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(-0.01, 0.0, 0.0)); //Pomeranje (Matrica transformacije, pomeraj po XYZ)
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
-                    cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+                    cameraPos1 -= glm::normalize(glm::cross(cameraFront1, cameraUp1)) * cameraSpeed;
                 }
                 if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(0.01, 0.0, 0.0));
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
-                    cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+                    cameraPos1 += glm::normalize(glm::cross(cameraFront1, cameraUp1)) * cameraSpeed;
                 }
                 if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.0, -0.01));
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
-                    cameraPos += cameraSpeed * cameraFront;
+                    cameraPos1 += cameraSpeed * cameraFront1;
                 }
                 if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.0, 0.01));
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
-                    cameraPos -= cameraSpeed * cameraFront;
+                    cameraPos1 -= cameraSpeed * cameraFront1;
                 }
             }
             else {
@@ -425,37 +444,47 @@ int main(void)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.01, 0.0));
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
-                    cameraPos.y += cameraSpeed;
+                    cameraPos1.y += cameraSpeed;
 
                 }
                 if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, -0.01, 0.0));
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
-                    cameraPos.y -= cameraSpeed;
+                    cameraPos1.y -= cameraSpeed;
                 }
                 //rotiranje levo desno
                 if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
                 {
                     modelDron1 = glm::rotate(modelDron1, glm::radians(0.5f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
-                    yaw -= sensitivity;
+                    yaw1 -= sensitivity;
                 }
                 if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
                 {
                     modelDron1 = glm::rotate(modelDron1, glm::radians(-0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
-                    yaw += sensitivity;
+                    yaw1 += sensitivity;
                 }
             }
         }
 
+        //paljenje/gasenje kamere1
+        if (glfwGetKey(window, GLFW_KEY_1) && glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+        {
+            CameraActive1 = 1;
+        }
+        else if (glfwGetKey(window, GLFW_KEY_1) && glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+        {
+            CameraActive1 = 0;
+        }
+
         //update-ovanje rotiranja kamere
-        glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        direction.y = sin(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        cameraFront = glm::normalize(direction);
+        glm::vec3 direction1;
+        direction1.x = cos(glm::radians(yaw1)) * cos(glm::radians(pitch));
+        direction1.y = sin(glm::radians(pitch));
+        direction1.z = sin(glm::radians(yaw1)) * cos(glm::radians(pitch));
+        cameraFront1 = glm::normalize(direction1);
 
 
         //ucitavanje drona 2
@@ -464,67 +493,150 @@ int main(void)
 
         if (SwitchOnOff2 == 1) {
             //pomeranje drona levo desno, napred nazad
-            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-            {
-                modelDron2 = glm::translate(modelDron2, glm::vec3(-0.01, 0.0, 0.0)); //Pomeranje (Matrica transformacije, pomeraj po XYZ)
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS) {
+                if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+                {
+                    modelDron2 = glm::translate(modelDron2, glm::vec3(-0.01, 0.0, 0.0)); //Pomeranje (Matrica transformacije, pomeraj po XYZ)
+                    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+                    cameraPos2 -= glm::normalize(glm::cross(cameraFront2, cameraUp2)) * cameraSpeed;
+                }
+                if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+                {
+                    modelDron2 = glm::translate(modelDron2, glm::vec3(0.01, 0.0, 0.0));
+                    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+                    cameraPos2 += glm::normalize(glm::cross(cameraFront2, cameraUp2)) * cameraSpeed;
+                }
+                if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+                {
+                    modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, 0.0, -0.01));
+                    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+                    cameraPos2 += cameraSpeed * cameraFront2;
+                }
+                if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+                {
+                    modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, 0.0, 0.01));
+                    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+                    cameraPos2 -= cameraSpeed * cameraFront2;
+                }
             }
-            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-            {
-                modelDron2 = glm::translate(modelDron2, glm::vec3(0.01, 0.0, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
-            }
-            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-            {
-                modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, 0.0, -0.01));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
-            }
-            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-            {
-                modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, 0.0, 0.01));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
-            }
-            //pomeranje gore dole
-            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-            {
-                modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, 0.01, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
-            }
-            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-            {
-                modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, -0.01, 0.0));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
-            }
-            //rotiranje levo desno
-            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-            {
-                modelDron2 = glm::rotate(modelDron2, glm::radians(0.5f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
-            }
-            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-            {
-                modelDron2 = glm::rotate(modelDron2, glm::radians(-0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+            else {
+                //pomeranje gore dole
+                if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+                {
+                    modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, 0.01, 0.0));
+                    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+                    cameraPos2.y += cameraSpeed;
+                }
+                if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+                {
+                    modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, -0.01, 0.0));
+                    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+                    cameraPos2.y -= cameraSpeed;
+                }
+                //rotiranje levo desno
+                if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+                {
+                    modelDron2 = glm::rotate(modelDron2, glm::radians(0.5f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
+                    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+                    yaw2 -= sensitivity;
+                    
+                }
+                if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+                {
+                    modelDron2 = glm::rotate(modelDron2, glm::radians(-0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
+                    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
+                    yaw2 += sensitivity;
+                }
             }
         }
 
+        //paljenje/gasenje kamere
+        if (glfwGetKey(window, GLFW_KEY_2) && glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+        {
+            CameraActive2 = 1;
+        }
+        else if (glfwGetKey(window, GLFW_KEY_2) && glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+        {
+            CameraActive2 = 0;
+        }
+
+        //update-ovanje rotiranja kamere 2
+        glm::vec3 direction2;
+        direction2.x = cos(glm::radians(yaw2)) * cos(glm::radians(pitch));
+        direction2.y = sin(glm::radians(pitch));
+        direction2.z = sin(glm::radians(yaw2)) * cos(glm::radians(pitch));
+        cameraFront2 = glm::normalize(direction2);
 
 
         //****************************   LEVI EKRAN KAMERA   *****************************
-        glViewport(0, 0, wWidth / 2, wHeight); 
-        //glm::vec3 updatedCameraPos = glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z);
-        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        ModelShader.setMat4("uV", view);
+        glViewport(0, 0, wWidth / 2, wHeight);
 
+        
+        if (SwitchOnOff1 == 0 || LetelicaDeaktivirana1 == 1 || CameraActive1 == 0) {
+            glDisable(GL_DEPTH_TEST);
+            //pravougaonik noise
+            glUniform1i(UseTextLoc, 1);
+            glUseProgram(texShader);
+            glBindVertexArray(VAO[10]);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, checkerTexture3);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        else {
+            glEnable(GL_DEPTH_TEST);
+            ModelShader.use();
+            glm::mat4 view1 = glm::lookAt(cameraPos1, cameraPos1 + cameraFront1, cameraUp1);
+            ModelShader.setMat4("uV", view1);
 
+            //iscrtavanje terena
+            ModelShader.setMat4("uM", modelMapa);
+            teren.Draw(ModelShader);
+
+            ////iscrtavanje drona 1
+            //ModelShader.setMat4("uM", modelDron1);
+            //drone.Draw(ModelShader);
+
+            //iscrtavanje drona 2
+            ModelShader.setMat4("uM", modelDron2);
+            drone.Draw(ModelShader);
+        }
+       
 
         //****************************   DESNI EKRAN KAMERA   *****************************
         glViewport(wWidth / 2, 0, wWidth / 2, wHeight);
 
+        if (SwitchOnOff2 == 0 || LetelicaDeaktivirana2 == 1 || CameraActive2 == 0) {
+            glDisable(GL_DEPTH_TEST);
+            //pravougaonik noise
+            glUniform1i(UseTextLoc, 1);
+            glUseProgram(texShader);
+            glBindVertexArray(VAO[10]);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, checkerTexture3);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        else {
+        
+            glEnable(GL_DEPTH_TEST);
+            ModelShader.use();
+            glm::mat4 view2 = glm::lookAt(cameraPos2, cameraPos2 + cameraFront2, cameraUp2);
+            ModelShader.setMat4("uV", view2);
 
+            //iscrtavanje terena
+            ModelShader.setMat4("uM", modelMapa);
+            teren.Draw(ModelShader);
 
+            //iscrtavanje drona 1
+            ModelShader.setMat4("uM", modelDron1);
+            drone.Draw(ModelShader);
 
-
+            ////ucitavanje drona 2
+            //ModelShader.setMat4("uM", modelDron2);
+            //drone.Draw(ModelShader);
+        }
+        
 
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
@@ -799,6 +911,7 @@ int main(void)
 
     glDeleteTextures(1, &checkerTexture1);
     glDeleteTextures(1, &checkerTexture2);
+    glDeleteTextures(1, &checkerTexture3);
     glDeleteBuffers(n, VBO);
     glDeleteVertexArrays(n, VAO);
     glDeleteProgram(texShader);
