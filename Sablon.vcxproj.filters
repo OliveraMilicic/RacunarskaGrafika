@@ -32,6 +32,9 @@
     <None Include="bat.frag" />
     <None Include="object.vert" />
     <None Include="object.frag" />
+    <None Include="lighting.vert" />
+    <None Include="cube.vert" />
+    <None Include="cube.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\Providna.png">
@@ -46,6 +49,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="shader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lighting.frag">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
