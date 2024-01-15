@@ -75,6 +75,7 @@ int main(void)
 
 
     Shader ModelShader("object.vert", "object.frag");
+    Shader LightCubeShader("cube.vert", "cube.frag");
    
 
     ModelShader.use();
@@ -91,7 +92,7 @@ int main(void)
 
     //*******************************    UNIFORME    ********************************
     //perspektiva
-    glm::mat4 projection = glm::perspective(glm::radians(90.0f), (float)wWidth / (float)wHeight, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(75.0f), (float)wWidth / (float)wHeight, 0.1f, 100.0f);
     ModelShader.setMat4("uP", projection);
 
 
@@ -126,12 +127,6 @@ int main(void)
 
 
     //teren
-    
-    //glm::mat4 view = glm::mat4(1.0f);
-    //glm::mat4 projection = glm::mat4(1.0f);
-    //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    //projection = glm::perspective(glm::radians(45.0f), (float)wWidth / 2 / (float)wHeight, 0.1f, 100.0f);
-
     glm::mat4 modelMapa = glm::mat4(1.0f);
     glm::vec3 newCoordinates = glm::vec3(0.0, -4.0, -30.0); //minus ispred Z da bi islo dalje od nas
     modelMapa = glm::translate(glm::mat4(1.0f), newCoordinates);
@@ -152,6 +147,20 @@ int main(void)
     glUseProgram(modelShader); //Slanje default vrijednosti uniformi
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1)); //(Adresa matrice, broj matrica koje saljemo, da li treba da se transponuju, pokazivac do matrica)
     
+    //svetla drona 1
+    glm::mat4 modelCube[3] = {
+        glm::mat4(1.0f),
+        glm::mat4(1.0f),
+        glm::mat4(1.0f)
+    };
+
+
+    modelCube[0] = glm::translate(glm::mat4(1.0f), glm::vec3(newCoordinates1.x - 0.3f, newCoordinates1.y, newCoordinates1.z - 0.5f));
+    modelCube[0] = glm::scale(modelCube[0], glm::vec3(0.25f, 0.25f, 0.25f));
+    modelCube[1] = glm::translate(glm::mat4(1.0f), glm::vec3(newCoordinates1.x + 0.3f, newCoordinates1.y, newCoordinates1.z - 0.5f));
+    modelCube[1] = glm::scale(modelCube[1], glm::vec3(0.25f, 0.25f, 0.25f));
+    modelCube[2] = glm::translate(glm::mat4(1.0f), glm::vec3(newCoordinates1.x, newCoordinates1.y, newCoordinates1.z + 0.5f));
+    modelCube[2] = glm::scale(modelCube[2], glm::vec3(0.25f, 0.25f, 0.25f));
 
     //dron2
     glm::mat4 modelDron2 = glm::mat4(1.0f);
@@ -321,8 +330,63 @@ int main(void)
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(0);
 
+    float CubeVertices[] = {
+        // X     Y     Z     NX    NY    NZ    U     V    FRONT SIDE
+       -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // L D
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, // R D
+       -0.5f,  0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // L U
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, // R D
+        0.5f,  0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // R U
+       -0.5f,  0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // L U
+       // LEFT SIDE
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // L D
+        -0.5f, -0.5f,  0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // R D
+        -0.5f,  0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // L U
+        -0.5f, -0.5f,  0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // R D
+        -0.5f,  0.5f,  0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // R U
+        -0.5f,  0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // L U
+        // RIGHT SIDE
+        0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // L D
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // R D
+        0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // L U
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // R D
+        0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // R U
+        0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // L U
+        // BOTTOM SIDE
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, // L D
+         0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, // R D
+        -0.5f, -0.5f,  0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // L U
+         0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, // R D
+         0.5f, -0.5f,  0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, // R U
+        -0.5f, -0.5f,  0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // L U
+        // TOP SIDE
+        -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // L D
+         0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // R D
+        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // L U
+         0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // R D
+         0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // R U
+        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // L U
+        // BACK SIDE
+        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // L D
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, // R D
+         0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, // L U
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, // R D
+        -0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, // R U
+         0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, // L U
+        };
 
+    unsigned CubeVAO;
+    glGenVertexArrays(1, &CubeVAO);
+    glBindVertexArray(CubeVAO);
 
+    unsigned CubeVBO;
+    glGenBuffers(1, &CubeVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, 36 * 8 * sizeof(float), CubeVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+            
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -415,7 +479,7 @@ int main(void)
 
         //koristimo ovaj shader za ucitavanje modela
         ModelShader.use();
-
+        glm::vec3 currentPosition;
 
         //pomeranje drona 1
         if (SwitchOnOff1 == 1) {
@@ -424,25 +488,46 @@ int main(void)
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS) {
                 if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
                 {
+
                     modelDron1 = glm::translate(modelDron1, glm::vec3(-0.03, 0.0, 0.0)); //Pomeranje (Matrica transformacije, pomeraj po XYZ)
+               
+                    modelCube[0] = glm::translate(modelCube[0], glm::vec3(-0.03, 0.0, 0.0));
+                    modelCube[1] = glm::translate(modelCube[1], glm::vec3(-0.03, 0.0, 0.0));
+                    modelCube[2] = glm::translate(modelCube[2], glm::vec3(-0.03, 0.0, 0.0));
+
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
                     cameraPos1 -= glm::normalize(glm::cross(cameraFront1, cameraUp1)) * cameraSpeed;
                 }
                 if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(0.03, 0.0, 0.0));
+
+                    modelCube[0] = glm::translate(modelCube[0], glm::vec3(0.03, 0.0, 0.0));
+                    modelCube[1] = glm::translate(modelCube[1], glm::vec3(0.03, 0.0, 0.0));
+                    modelCube[2] = glm::translate(modelCube[2], glm::vec3(0.03, 0.0, 0.0));
+
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
                     cameraPos1 += glm::normalize(glm::cross(cameraFront1, cameraUp1)) * cameraSpeed;
                 }
                 if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.0, -0.03));
+                 
+                    modelCube[0] = glm::translate(modelCube[0], glm::vec3(0.0, 0.0, -0.03));
+                    modelCube[1] = glm::translate(modelCube[1], glm::vec3(0.0, 0.0, -0.03));
+                    modelCube[2] = glm::translate(modelCube[2], glm::vec3(0.0, 0.0, -0.03));
+
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
                     cameraPos1 += cameraSpeed * cameraFront1;
                 }
                 if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.0, 0.03));
+                   
+                    modelCube[0] = glm::translate(modelCube[0], glm::vec3(0.0, 0.0, 0.03));
+                    modelCube[1] = glm::translate(modelCube[1], glm::vec3(0.0, 0.0, 0.03));
+                    modelCube[2] = glm::translate(modelCube[2], glm::vec3(0.0, 0.0, 0.03));
+
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
                     cameraPos1 -= cameraSpeed * cameraFront1;
                 }
@@ -453,6 +538,10 @@ int main(void)
                 {
                     if (cameraPos1.y < 10.0f) { // ogranicenje kretanja ka gore
                         modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, 0.03, 0.0));
+                        modelCube[0] = glm::translate(modelCube[0], glm::vec3(0.0, 0.03, 0.0));
+                        modelCube[1] = glm::translate(modelCube[1], glm::vec3(0.0, 0.03, 0.0));
+                        modelCube[2] = glm::translate(modelCube[2], glm::vec3(0.0, 0.03, 0.0));
+
                         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
                         cameraPos1.y += cameraSpeed;
                     }
@@ -460,6 +549,10 @@ int main(void)
                 if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
                 {
                     modelDron1 = glm::translate(modelDron1, glm::vec3(0.0, -0.03, 0.0));
+                    modelCube[0] = glm::translate(modelCube[0], glm::vec3(0.0, -0.03, 0.0));
+                    modelCube[1] = glm::translate(modelCube[1], glm::vec3(0.0, -0.03, 0.0));
+                    modelCube[2] = glm::translate(modelCube[2], glm::vec3(0.0, -0.03, 0.0));
+
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
                     cameraPos1.y -= cameraSpeed;
                     if (cameraPos1.y < -4.0f) LetelicaDeaktivirana1 = 1;  //kad dodje do poda unisti se
@@ -468,6 +561,10 @@ int main(void)
                 if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
                 {
                     modelDron1 = glm::rotate(modelDron1, glm::radians(0.2f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
+                    modelCube[0] = glm::rotate(modelCube[0], glm::radians(0.2f), glm::vec3(0.0f, 1.0f, 0.0f));
+                    modelCube[1] = glm::rotate(modelCube[1], glm::radians(0.2f), glm::vec3(0.0f, 1.0f, 0.0f));
+                    modelCube[2] = glm::rotate(modelCube[2], glm::radians(0.2f), glm::vec3(0.0f, 1.0f, 0.0f));
+
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
                     yaw1 -= sensitivity;
                     directionAngle1 += sensitivity;
@@ -475,6 +572,17 @@ int main(void)
                 if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
                 {
                     modelDron1 = glm::rotate(modelDron1, glm::radians(-0.2f), glm::vec3(0.0f, 1.0f, 0.0f));
+                    modelCube[0] = glm::rotate(modelCube[0], glm::radians(-0.2f), glm::vec3(0.0f, 1.0f, 0.0f));
+                    modelCube[1] = glm::rotate(modelCube[1], glm::radians(-0.2f), glm::vec3(0.0f, 1.0f, 0.0f));
+                    modelCube[2] = glm::rotate(modelCube[2], glm::radians(-0.2f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+                   // currentPosition.x = modelDron1[3][0];
+                   // currentPosition.y = modelDron1[3][1];
+                    //currentPosition.z = modelDron1[3][2];
+                    //modelCube[0] = glm::translate(modelCube[0], glm::vec3(currentPosition.x - 0.3f, currentPosition.y, currentPosition.z - 0.5f));
+                    //modelCube[1] = glm::translate(modelCube[0], glm::vec3(currentPosition.x + 0.3f, currentPosition.y, currentPosition.z - 0.5f));
+                   // modelCube[2] = glm::translate(modelCube[0], glm::vec3(currentPosition.x, currentPosition.y, currentPosition.z + 0.5f));
+
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
                     yaw1 += sensitivity;
                     directionAngle1 -= sensitivity;
@@ -619,6 +727,7 @@ int main(void)
             if (LetelicaDeaktivirana2 == 0) {
                 ModelShader.setMat4("uM", modelDron2);
                 drone.Draw(ModelShader);
+
             }
         }
        
@@ -640,8 +749,6 @@ int main(void)
         else {
             glEnable(GL_DEPTH_TEST);
 
-        
-  
             ModelShader.use();
             glm::mat4 view2 = glm::lookAt(cameraPos2, cameraPos2 + cameraFront2, cameraUp2);
             ModelShader.setMat4("uV", view2);
@@ -655,6 +762,21 @@ int main(void)
             if (LetelicaDeaktivirana1 == 0) {
                 ModelShader.setMat4("uM", modelDron1);
                 drone.Draw(ModelShader);
+
+
+                //svetla
+                LightCubeShader.use();
+                LightCubeShader.setMat4("uProjection", projection);
+                LightCubeShader.setMat4("uView", view2);
+
+
+                glBindVertexArray(CubeVAO);
+                for (unsigned int i = 0; i < 3; i++)
+                {
+                    LightCubeShader.setMat4("uModel", modelCube[i]);
+                    LightCubeShader.setVec3("uCol", 1.0f, 1.0f, 1.0f);
+                    glDrawArrays(GL_TRIANGLES, 0, 36);
+                }
             }
 
             ////ucitavanje drona 2
