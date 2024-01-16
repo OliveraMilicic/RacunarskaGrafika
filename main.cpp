@@ -80,11 +80,12 @@ int main(void)
    
 
     ModelShader.use();
-    ModelShader.setVec3("uLightPos", 0, 1, 3);
-    ModelShader.setVec3("uViewPos", 0, 0, 5);
+    ModelShader.setVec3("uLightPos", 0, 5, -5);
+    ModelShader.setVec3("uViewPos", 0, 2, 0);
     ModelShader.setVec3("uLightColor", 1, 1, 1);
 
     //spekularna mapa --- PROVERITI DA LI RADI
+
     unsigned specularMap = loadImageToTexture("res/Majevica_specular.png");
     glActiveTexture(GL_TEXTURE1); // Use a different texture unit than the diffuse map
     glBindTexture(GL_TEXTURE_2D, specularMap); // Bind the specular map
@@ -629,10 +630,6 @@ int main(void)
         cameraFront1 = glm::normalize(direction1);
 
 
-        //ucitavanje drona 2
-        ModelShader.setMat4("uM", modelDron2);
-        drone.Draw(ModelShader);
-
         if (SwitchOnOff2 == 1) {
             //pomeranje drona levo desno, napred nazad
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) != GLFW_PRESS) {
@@ -797,6 +794,7 @@ int main(void)
 
             //iscrtavanje terena
             ModelShader.setMat4("uM", modelMapa);
+            //ModelShader.setVec3("uViewPos", cameraPos1);
             teren.Draw(ModelShader);
 
 
@@ -816,7 +814,7 @@ int main(void)
              LightingShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
              LightingShader.setFloat("pointLights[0].constant", 1.0f);
              LightingShader.setFloat("pointLights[0].linear", 0.09f);
-             c.setFloat("pointLights[0].quadratic", 0.032f);
+             LightingShader.setFloat("pointLights[0].quadratic", 0.032f);
              LightingShader.setMat4("uM", modelDron2);
              drone.Draw(LightingShader);
 
