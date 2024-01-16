@@ -76,6 +76,7 @@ int main(void)
 
     Shader ModelShader("object.vert", "object.frag");
     Shader LightCubeShader("cube.vert", "cube.frag");
+    Shader LightingShader("lighting.vert", "lighting.frag");
    
 
     ModelShader.use();
@@ -88,7 +89,6 @@ int main(void)
     glActiveTexture(GL_TEXTURE1); // Use a different texture unit than the diffuse map
     glBindTexture(GL_TEXTURE_2D, specularMap); // Bind the specular map
     ModelShader.setInt("uSpecMap", 1); // Set the shader uniform
-
 
     //*******************************    UNIFORME    ********************************
     //perspektiva
@@ -558,7 +558,7 @@ int main(void)
 
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
                     cameraPos1.y -= cameraSpeed;
-                    if (cameraPos1.y < -4.0f) LetelicaDeaktivirana1 = 1;  //kad dodje do poda unisti se
+                    if (cameraPos1.y < -3.0f) LetelicaDeaktivirana1 = 1;  //kad dodje do poda unisti se
                 }
                 //rotiranje levo desno
                 if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
@@ -607,7 +607,7 @@ int main(void)
 
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron1));
             cameraPos1.y -= 0.02;
-            if (cameraPos1.y < -4.0f) LetelicaDeaktivirana1 = 1;  //kad dodje do poda unisti se
+            if (cameraPos1.y < -3.0f) LetelicaDeaktivirana1 = 1;  //kad dodje do poda unisti se
         }
 
 
@@ -702,7 +702,7 @@ int main(void)
 
                     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
                     cameraPos2.y -= cameraSpeed;
-                    if (cameraPos2.y < -4.0f) LetelicaDeaktivirana2 = 1;  //kad dodje do poda unisti se
+                    if (cameraPos2.y < -3.0f) LetelicaDeaktivirana2 = 1;  //kad dodje do poda unisti se
                 }
                 //rotiranje levo desno
                 if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
@@ -748,11 +748,11 @@ int main(void)
             modelDron2 = glm::translate(modelDron2, glm::vec3(0.0, -0.02, 0.0));
             modelCube[3] = glm::translate(modelCube[3], glm::vec3(0.0, -0.02, 0.0));
             modelCube[4] = glm::translate(modelCube[4], glm::vec3(0.0, -0.02, 0.0));
-            modelCube[5] = glm::translate(modelCube[5], glm::vec3(0.0, -0.02, 0.0));
+            modelCube[5] = glm::translate(modelCube[5], glm::vec3(0.0, -0.02, 0.0)); 
 
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelDron2));
             cameraPos2.y -= 0.02;
-            if (cameraPos2.y < -4.0f) LetelicaDeaktivirana2 = 1;  //kad dodje do poda unisti se
+            if (cameraPos2.y < -3.0f) LetelicaDeaktivirana2 = 1;  //kad dodje do poda unisti se
         }
 
         //paljenje/gasenje kamere
@@ -799,12 +799,29 @@ int main(void)
             ModelShader.setMat4("uM", modelMapa);
             teren.Draw(ModelShader);
 
-            ////iscrtavanje drona 1
-            //ModelShader.setMat4("uM", modelDron1);
-            //drone.Draw(ModelShader);
 
             //iscrtavanje drona 2
             if (LetelicaDeaktivirana2 == 0) {
+              /*    LightingShader.use();
+             LightingShader.setMat4("uV", view1);
+             LightingShader.setMat4("uP", projection);
+             LightingShader.setVec3("viewPos", cameraPos1);
+             LightingShader.setFloat("material.shininess", 32.0f);
+
+             currentPosition = glm::vec3(modelCube[0][3][0], modelCube[0][3][1], modelCube[0][3][2]);
+
+             LightingShader.setVec3("pointLights[0].position", currentPosition);
+             LightingShader.setVec3("pointLights[0].ambient", 0.05f  , 0.05f, 0.05f);
+             LightingShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+             LightingShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+             LightingShader.setFloat("pointLights[0].constant", 1.0f);
+             LightingShader.setFloat("pointLights[0].linear", 0.09f);
+             c.setFloat("pointLights[0].quadratic", 0.032f);
+             LightingShader.setMat4("uM", modelDron2);
+             drone.Draw(LightingShader);
+
+             */
+
                 ModelShader.setMat4("uM", modelDron2);
                 drone.Draw(ModelShader);
 
@@ -853,6 +870,9 @@ int main(void)
    
             //iscrtavanje drona 1
             if (LetelicaDeaktivirana1 == 0) {
+
+
+
                 ModelShader.setMat4("uM", modelDron1);
                 drone.Draw(ModelShader);
 
@@ -1071,11 +1091,6 @@ int main(void)
                 LetelicaDeaktivirana2 = 1;
             }
 
-
-
-            //glClearColor(0.50, 0.0, 0.50, 1.0);
-
-
             //pravougaonik tekstura mape
             glViewport(wWidth / 2 - mWidth / 2, 0, mWidth, mHeight);//iscrtavanje prozora na sredini ekrana, smanjen
             glUniform1i(UseTextLoc, 0);
@@ -1112,11 +1127,6 @@ int main(void)
             glUniform2f(uPosLoc, 0, 0);
             glBindVertexArray(VAO[5]);
             glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle3) / (2 * sizeof(float)));
-
-            //pravougaonik kontrl tbl
-            //glUseProgram(grayrectShader);
-            //glBindVertexArray(VAO[1]);
-            //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 
             //pravougaonik zeleno staklo

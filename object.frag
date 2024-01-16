@@ -9,7 +9,7 @@ uniform vec3 uLightPos;
 uniform vec3 uViewPos; 
 uniform vec3 uLightColor;
 
-uniform sampler2D uDiffMap1;
+uniform sampler2D uDiffMap;
 uniform sampler2D uSpecMap; 
 
 void main()
@@ -33,5 +33,6 @@ void main()
     vec3 specular = specularStrength * spec * specColor * uLightColor;  
 
 
-    FragColor = texture(uDiffMap1, chUV) * vec4(ambient + diffuse + specular, 1.0);
+    FragColor = texture(uDiffMap, chUV) * vec4(ambient + diffuse + specular, 1.0);
+
 }

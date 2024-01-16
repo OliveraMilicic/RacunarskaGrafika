@@ -57,7 +57,7 @@ public:
             // retrieve texture number (the N in diffuse_textureN)
             string number;
             string name = textures[i].type;
-            if (name == "uDiffMap1")
+            if (name == "uDiffMap")
                 number = std::to_string(diffuseNr++);
             else
                 number = std::to_string(specularNr++); // transfer unsigned int to string

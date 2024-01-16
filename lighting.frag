@@ -21,9 +21,9 @@ struct PointLight {
 
 #define NR_POINT_LIGHTS 3
 
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoords;
+out vec3 chFragPos; //FragPos
+out vec3 chNormal; //Normal
+out vec2 chUV;//TexCoords
 
 uniform vec3 viewPos;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
@@ -35,13 +35,13 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 void main()
 {    
     // properties
-    vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 norm = normalize(chNormal);
+    vec3 viewDir = normalize(viewPos - chFragPos);
     vec3 result = vec3(0.0);
    
     // phase 2: point lights
     for(int i = 0; i < NR_POINT_LIGHTS; i++)
-        result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
+        result += CalcPointLight(pointLights[i], norm, chFragPos, viewDir);
     
     FragColor = vec4(result, 1.0);
 }
@@ -60,9 +60,9 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
     // combine results
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
-    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, chUV));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, chUV));
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, chUV));
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
